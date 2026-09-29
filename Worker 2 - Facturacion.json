@@ -1,0 +1,209 @@
+{
+  "name": "Worker 2 - Facturacion",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chatInput"
+            },
+            {
+              "name": "sessionId"
+            }
+          ]
+        }
+      },
+      "id": "1f1890ba-0756-4f73-b03b-d94c8a2a7498",
+      "name": "Cuando el Manager lo invoca",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "cliente_id",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "saldo_pendiente",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "b3",
+              "name": "estado_cuenta",
+              "value": "al_dia",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3d76d925-b2cd-4faf-910b-d5b75c324d6e",
+      "name": "Consultar Estado de Cuenta (mock CRM)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        80
+      ],
+      "notes": "En produccion, reemplazar por un nodo HTTP Request contra la API real de facturacion/CRM."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.estado_cuenta }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "44ee218f-927d-419a-85e9-1ec1c3071e62",
+      "name": "Validar Resultado",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "data",
+              "value": "={{ { cliente_id: $json.cliente_id, saldo_pendiente: $json.saldo_pendiente, estado_cuenta: $json.estado_cuenta } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a36bb098-79ca-45bf-a9cf-3c7fd7dc4f7b",
+      "name": "Contrato de Salida - Exito",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "d2",
+              "name": "data",
+              "value": "={{ { mensaje: 'No se pudo obtener informacion de facturacion para este cliente.' } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5b9f2d0-0fbe-4185-8282-98ad10baa709",
+      "name": "Contrato de Salida - Contingencia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        160
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cuando el Manager lo invoca": {
+      "main": [
+        [
+          {
+            "node": "Consultar Estado de Cuenta (mock CRM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Estado de Cuenta (mock CRM)": {
+      "main": [
+        [
+          {
+            "node": "Validar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Resultado": {
+      "main": [
+        [
+          {
+            "node": "Contrato de Salida - Exito",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contrato de Salida - Contingencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7dcfaaf2-e4f9-4fec-bdbf-9931283eba0f",
+  "meta": {
+    "instanceId": "aead8f1d90270919dbbd6ff988583e2d4ba7c02e2738093d3905f9f60e419d80"
+  },
+  "nodeGroups": [],
+  "id": "42u7fg9ZxvhvYb3w",
+  "tags": []
+}
